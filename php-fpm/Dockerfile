@@ -211,7 +211,7 @@ RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
 # xDebug:
 ###########################################################################
 
-ARG INSTALL_XDEBUG=false
+ARG INSTALL_XDEBUG=true
 
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
   # Install the xdebug extension
@@ -296,7 +296,7 @@ RUN if [ ${INSTALL_XDEBUG} = false -a ${INSTALL_BLACKFIRE} = true ]; then \
 # PHP REDIS EXTENSION
 ###########################################################################
 
-ARG INSTALL_PHPREDIS=false
+ARG INSTALL_PHPREDIS=true
 
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     # Install Php Redis Extension
@@ -313,7 +313,7 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
 # Swoole EXTENSION
 ###########################################################################
 
-ARG INSTALL_SWOOLE=false
+ARG INSTALL_SWOOLE=true
 RUN set -eux; \
     if [ ${INSTALL_SWOOLE} = true ]; then \
       # Install Php Swoole Extension
@@ -324,11 +324,29 @@ RUN set -eux; \
       elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
         pecl install swoole-4.5.11; \
       else \
-        pecl install swoole; \
+        pecl install swoole-4.8.11; \
       fi; \
       docker-php-ext-enable swoole; \
       php -m | grep -q 'swoole'; \
     fi
+
+
+###########################################################################
+# Solr EXTENSION
+###########################################################################
+
+ARG INSTALL_SOLR=true
+
+RUN set -eux; \
+    if [ ${INSTALL_SOLR} = true ]; then \
+      apt-get -yqq install wget libcurl4-openssl-dev libxml2 libxml2-dev \
+      && wget https://pecl.php.net/get/solr-2.5.1.tgz \
+      && tar -zxvf solr-2.5.1.tgz \
+      && cd solr-2.5.1 \
+      && phpize && ./configure && make && make install \
+      && docker-php-ext-enable solr; \
+    fi
+
 
 ###########################################################################
 # Taint EXTENSION
@@ -372,7 +390,7 @@ fi
 # Xhprof:
 ###########################################################################
 
-ARG INSTALL_XHPROF=false
+ARG INSTALL_XHPROF=true
 
 RUN set -eux; \
     if [ ${INSTALL_XHPROF} = true ]; then \
@@ -411,12 +429,13 @@ RUN set -eux; \
 # AMQP:
 ###########################################################################
 
-ARG INSTALL_AMQP=false
+ARG INSTALL_AMQP=true
 
 RUN set -eux; \
     if [ ${INSTALL_AMQP} = true ]; then \
-      # # Install the amqp extension
-      apt-get -yqq install librabbitmq-dev; \
+      # # Install the amqp extension \
+      apt-get update -yqq \
+      && apt-get -yqq install librabbitmq-dev; \
       if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
         pecl install amqp-1.11.0beta; \
       else \
@@ -673,7 +692,7 @@ COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 # Mysqli Modifications:
 ###########################################################################
 
-ARG INSTALL_MYSQLI=false
+ARG INSTALL_MYSQLI=true
 
 RUN if [ ${INSTALL_MYSQLI} = true ]; then \
     docker-php-ext-install mysqli \
@@ -784,6 +803,7 @@ ARG IMAGEMAGICK_VERSION=latest
 ENV IMAGEMAGICK_VERSION ${IMAGEMAGICK_VERSION}
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
+    apt-get update && \
     apt-get install -yqq libmagickwand-dev imagemagick && \
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
       cd /tmp && \

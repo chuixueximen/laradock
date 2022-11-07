@@ -150,7 +150,7 @@ RUN set -eux; \
 USER laradock
 
 # Check if global install need to be ran
-ARG COMPOSER_GLOBAL_INSTALL=false
+ARG COMPOSER_GLOBAL_INSTALL=true
 ENV COMPOSER_GLOBAL_INSTALL ${COMPOSER_GLOBAL_INSTALL}
 
 RUN if [ ${COMPOSER_GLOBAL_INSTALL} = true ]; then \
@@ -326,7 +326,7 @@ RUN set -eux; \
 
 USER root
 
-ARG INSTALL_XDEBUG=false
+ARG INSTALL_XDEBUG=true
 
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
   # Install the xdebug extension
@@ -552,13 +552,34 @@ RUN set -eux; \
       elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ]; then \
         echo '' | pecl -q install swoole-4.5.11; \
       else \
-        echo '' | pecl -q install swoole; \
+        echo '' | pecl -q install swoole-4.8.11; \
       fi; \
       echo "extension=swoole.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini; \
       ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-swoole.ini; \
       php -m | grep -q 'swoole'; \
     fi
 
+
+
+
+###########################################################################
+# Solr EXTENSION
+###########################################################################
+
+ARG INSTALL_SOLR=true
+
+RUN set -eux; \
+    if [ ${INSTALL_SOLR} = true ]; then \
+      apt-get update -yqq \
+      && apt-get -yqq install wget libcurl4-gnutls-dev libxml2 libxml2-dev \
+      && ln -s  /usr/include/x86_64-linux-gnu/curl  /usr/include/curl \
+      && ln -s  /usr/include/x86_64-linux-gnu/curl  /usr/include/curl/curl \
+      && wget https://pecl.php.net/get/solr-2.5.1.tgz \
+      && tar -zxvf solr-2.5.1.tgz \
+      && cd solr-2.5.1 \
+      && phpize && ./configure && make && make install \
+      && echo "extension=solr.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini; \
+    fi
 
 
 ###########################################################################
@@ -708,7 +729,7 @@ USER laradock
 # Check if NVM needs to be installed
 ARG NODE_VERSION=node
 ENV NODE_VERSION ${NODE_VERSION}
-ARG INSTALL_NODE=false
+ARG INSTALL_NODE=true
 ARG INSTALL_NPM_GULP=false
 ARG INSTALL_NPM_BOWER=false
 ARG INSTALL_NPM_VUE_CLI=false
@@ -1748,3 +1769,4 @@ RUN apt-get clean && \
 
 # Set default work directory
 WORKDIR /var/www
+EXPOSE 9601 9602
