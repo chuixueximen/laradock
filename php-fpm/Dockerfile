@@ -318,13 +318,13 @@ RUN set -eux; \
     if [ ${INSTALL_SWOOLE} = true ]; then \
       # Install Php Swoole Extension
       if   [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ]; then \
-        pecl install swoole-2.0.10; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl install swoole-2.0.10; \
       elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
-        pecl install swoole-4.3.5; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl install swoole-4.3.5; \
       elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
-        pecl install swoole-4.5.11; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl install swoole-4.5.11; \
       else \
-        pecl install swoole-4.8.11; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl install swoole-4.8.11; \
       fi; \
       docker-php-ext-enable swoole; \
       php -m | grep -q 'swoole'; \
@@ -345,6 +345,24 @@ RUN set -eux; \
       && cd solr-2.5.1 \
       && phpize && ./configure && make && make install \
       && docker-php-ext-enable solr; \
+    fi
+
+
+
+###########################################################################
+# Msgpack EXTENSION
+###########################################################################
+
+ARG INSTALL_MSGPACK=true
+
+RUN set -eux; \
+    if [ ${INSTALL_MSGPACK} = true ]; then \
+      apt-get update -yqq \
+      && wget wget https://github.com/msgpack/msgpack-php/archive/msgpack-2.0.3.tar.gz \
+      && tar -zxvf msgpack-2.0.3.tar.gz \
+      && cd msgpack-php-msgpack-2.0.3/ \
+      && phpize && ./configure && make && make install \
+      && echo "extension=msgpack.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini; \
     fi
 
 

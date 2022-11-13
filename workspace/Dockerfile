@@ -546,13 +546,13 @@ RUN set -eux; \
     if [ ${INSTALL_SWOOLE} = true ]; then \
       # Install Php Swoole Extension
       if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-        echo '' | pecl -q install swoole-2.0.10; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl -q install swoole-2.0.10; \
       elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
-        echo '' | pecl -q install swoole-4.3.5; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl -q install swoole-4.3.5; \
       elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ]; then \
-        echo '' | pecl -q install swoole-4.5.11; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl -q install swoole-4.5.11; \
       else \
-        echo '' | pecl -q install swoole-4.8.11; \
+        printf "no\nyes\nno\nno\nno\nno\nno\n" | pecl -q install swoole-4.8.11; \
       fi; \
       echo "extension=swoole.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini; \
       ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-swoole.ini; \
@@ -581,6 +581,22 @@ RUN set -eux; \
       && echo "extension=solr.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini; \
     fi
 
+
+###########################################################################
+# Msgpack EXTENSION
+###########################################################################
+
+ARG INSTALL_MSGPACK=true
+
+RUN set -eux; \
+    if [ ${INSTALL_MSGPACK} = true ]; then \
+      apt-get update -yqq \
+      && wget wget https://github.com/msgpack/msgpack-php/archive/msgpack-2.0.3.tar.gz \
+      && tar -zxvf msgpack-2.0.3.tar.gz \
+      && cd msgpack-php-msgpack-2.0.3/ \
+      && phpize && ./configure && make && make install \
+      && echo "extension=msgpack.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini; \
+    fi
 
 ###########################################################################
 # xlswriter:
