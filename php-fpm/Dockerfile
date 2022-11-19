@@ -358,12 +358,23 @@ ARG INSTALL_MSGPACK=true
 RUN set -eux; \
     if [ ${INSTALL_MSGPACK} = true ]; then \
       apt-get update -yqq \
-      && wget wget https://github.com/msgpack/msgpack-php/archive/msgpack-2.0.3.tar.gz \
+      && wget https://github.com/msgpack/msgpack-php/archive/msgpack-2.0.3.tar.gz \
       && tar -zxvf msgpack-2.0.3.tar.gz \
       && cd msgpack-php-msgpack-2.0.3/ \
       && phpize && ./configure && make && make install \
-      && echo "extension=msgpack.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini; \
+      && docker-php-ext-enable msgpack; \
     fi
+
+
+###########################################################################
+# Shmop Modifications:
+###########################################################################
+
+ARG INSTALL_SHMOP=true
+
+RUN if [ ${INSTALL_SHMOP} = true ]; then \
+    docker-php-ext-install shmop; \
+fi
 
 
 ###########################################################################
