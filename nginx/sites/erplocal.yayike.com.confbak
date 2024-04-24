@@ -1,0 +1,200 @@
+server {
+    listen      80;
+	charset utf-8;
+	server_name localwww.yayike.com;
+
+   	access_log  /var/log/nginx/localwww.yayike.com.log;
+    error_log  /var/log/nginx/localwww.yayike.com_error.log;
+	index index.html;
+
+    root   /var/www/yayike-platform/applications/mall;
+    index  index.html index.php;
+
+    error_page   500 502 503 504  /50x.html;
+   	location = /50x.html {
+        	root   /usr/share/nginx/html;
+    }
+
+    location /xhprof_html {
+           alias /var/www/yayike-platform/applications/mall/xhprof_html/;
+    }
+	location / {
+		proxy_pass        https://beta-yyk-www-1305681160.cos-website.ap-shanghai.myqcloud.com/;
+		index index.html index.htm;
+		#proxy_redirect     off;
+		#proxy_set_header   Host $host;
+		proxy_set_header   X-Real-IP  $remote_addr;
+		proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header   Referer http://$host;
+	}
+
+	location  ^~ /static/ {
+        proxy_pass https://beta-yyk-www-1305681160.cos-website.ap-shanghai.myqcloud.com/static/;
+    }
+
+    location ~ \.php$ {
+	root /var/www/yayike-platform/applications/mall;
+        #fastcgi_pass   php:9000; #这个就是--link并入的网络连接
+		fastcgi_pass   php-upstream;
+        fastcgi_index  index.php;
+        #fastcgi_param  SCRIPT_FILENAME  /www$fastcgi_script_name;
+	fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+
+	location /status_server_nginx {
+		stub_status on;
+	}
+    #include /etc/nginx/conf.d/rewrite/rewrite.conf;
+
+	rewrite ^/api/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)$ /index.php?com=$1&t=$2&$args? last;
+}
+server {
+    listen       80;
+    server_name    local.yayike.com;
+    charset utf-8;
+    #access_log  logs/host.access.log  main;
+
+
+    location / {
+        root           /var/www/yayike-platform/applications/mall;
+        fastcgi_pass   php-upstream;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  /$document_root$fastcgi_script_name;
+        include        fastcgi_params;
+
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
+    }
+
+    location ~ \.php$ {
+        root           /var/www/yayike-platform/applications/mall;
+        fastcgi_pass   php-upstream;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  /$document_root$fastcgi_script_name;
+        include        fastcgi_params;
+
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
+    }
+
+    error_log /var/log/nginx/local_yayike_com_error.log;
+    access_log /var/log/nginx/local_yayike_com_access.log;
+
+    rewrite ^/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)$ /index.php?com=$1&t=$2&$args? last;
+}
+
+
+server {
+    listen       80;
+    server_name    localconsole.yayike.com;
+    charset utf-8;
+    #access_log  logs/host.access.log  main;
+
+
+    location / {
+        root   /var/www/yayike-platform/applications/nanji;
+
+        #proxy_pass    http://erpfelocal.fommos.tech/;
+        proxy_pass    https://beta-yyk-platform-1305681160.cos-website.ap-shanghai.myqcloud.com/;
+        index index.html index.htm;
+
+        proxy_set_header   X-Real-IP  $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   Referer http://$host;
+    }
+
+    location ^~ /group1/ {
+        proxy_pass  http://yyt.nanjids.com/group1/;
+    }
+
+    location ~ \.php$ {
+        root           /var/www/yayike-platform/applications/nanji;
+        fastcgi_pass   php-upstream;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  /$document_root$fastcgi_script_name;
+        fastcgi_param  PHP_VALUE "auto_prepend_file=/var/www/xhgui-branch/external/header.php";
+        include        fastcgi_params;
+
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
+    }
+
+    error_log /var/log/nginx/localconsole_yayike_com_error.log;
+    access_log /var/log/nginx/localconsole_yayike_com_access.log;
+
+    rewrite ^/goto/(.*)/(.*)$ /index.php?com=$1&t=$2&$args;
+    rewrite ^/goto/(.*)$ /index.php?com=$1&t=display&$args;
+
+    #雅衣伴
+    rewrite ^/erp/(.*)/(.*)$ /index.php?site_id=2&com=$1&t=$2&$args;
+    rewrite ^/erp/(.*)$ /index.php?site_id=2&com=$1&t=display&$args;
+    #雅衣客
+    rewrite ^/yyk/(.*)/(.*)$ /index.php?site_id=10&com=$1&t=$2&$args;
+    rewrite ^/yyk/(.*)$ /index.php?site_id=10&com=$1&t=display&$args;
+
+    rewrite ^/pss/(.*)/(.*)$ /index.php?site_id=3&com=$1&t=$2&$args;
+    rewrite ^/pss/(.*)$ /index.php?site_id=3&com=$1&t=display&$args;
+
+    rewrite ^/fms/(.*)/(.*)$ /index.php?site_id=4&com=$1&t=$2&$args;
+    rewrite ^/fms/(.*)$ /index.php?site_id=4&com=$1&t=display&$args;
+
+    rewrite ^/wms/(.*)/(.*)$ /index.php?site_id=5&com=$1&t=$2&$args;
+    rewrite ^/wms/(.*)$ /index.php?site_id=5&com=$1&t=display&$args;
+
+    rewrite ^/plm/(.*)/(.*)$ /index.php?site_id=6&com=$1&t=$2&$args;
+    rewrite ^/plm/(.*)$ /index.php?site_id=6&com=$1&t=display&$args;
+
+    rewrite ^/yyds/(.*)/(.*)$ /index.php?com=$1&t=$2&$args&yyds=1;
+    rewrite ^/yyds/(.*)$ /index.php?com=$1&t=display&$args&yyds=1;
+
+    rewrite ^/pda/(.*)/(.*)$ /index.php?site_id=20002&com=$1&t=$2&$args;
+    rewrite ^/pda/(.*)$ /index.php?site_id=20002&com=$1&t=display&$args;
+}
+
+server {
+    listen       80;
+    server_name    localsup.yayike.com localdis.yayike.com;
+    charset utf-8;
+    #access_log  logs/host.access.log  main;
+
+
+    location / {
+        root   /var/www/yayike-platform/applications/merchant;
+
+        #proxy_pass    http://erpfelocal.fommos.tech/;
+        proxy_pass    https://beta-business-plat-1305681160.cos-website.ap-shanghai.myqcloud.com/;
+        index index.html index.htm;
+
+        proxy_set_header   X-Real-IP  $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   Referer http://$host;
+    }
+
+    location ~ \.php$ {
+        root           /var/www/yayike-platform/applications/merchant;
+        fastcgi_pass   php-upstream;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  /$document_root$fastcgi_script_name;
+        include        fastcgi_params;
+
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
+    }
+
+    error_log /var/log/nginx/localsup_or_dis_yayike_com_error.log;
+    access_log /var/log/nginx/localsup_or_dis_yayike_com_access.log;
+
+    rewrite ^/goto/(.*)/(.*)$ /index.php?com=$1&t=$2&$args;
+    rewrite ^/goto/(.*)$ /index.php?com=$1&t=display&$args;
+
+    #经销商
+    rewrite ^/dis/(.*)/(.*)$ /index.php?site_id=10002&com=$1&t=$2&$args;
+    #供应商
+    rewrite ^/sup/(.*)$ /index.php?site_id=10001&com=$1&t=display&$args;
+
+}

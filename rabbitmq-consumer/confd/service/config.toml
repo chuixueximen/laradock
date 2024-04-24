@@ -1,0 +1,7 @@
+[template]
+src = "supervisor.tmpl"
+dest = "/etc/supervisor/conf.d/php.conf"
+keys = [
+  "/cache-mq/service/"
+]
+reload_cmd = "supervisorctl update"

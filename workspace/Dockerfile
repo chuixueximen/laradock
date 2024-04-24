@@ -529,10 +529,20 @@ RUN if [ ${INSTALL_GEARMAN} = true ]; then \
 ###########################################################################
 # PHP REDIS EXTENSION
 ###########################################################################
+# Install igbinary
+#RUN pecl install igbinary && docker-php-ext-enable igbinary \
+ARG INSTALL_IGBINARY=true
+
+RUN if [ ${INSTALL_IGBINARY} = true ]; then \
+    apt-get install -yqq && \
+    pecl install igbinary && \
+    echo "extension=igbinary.so" >> /etc/php/${LARADOCK_PHP_VERSION}/cli/php.ini \
+;fi
 
 ARG INSTALL_PHPREDIS=false
 
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
+    apt-get update && \
     apt-get install -yqq php${LARADOCK_PHP_VERSION}-redis \
 ;fi
 
@@ -566,7 +576,7 @@ RUN set -eux; \
 # Solr EXTENSION
 ###########################################################################
 
-ARG INSTALL_SOLR=true
+ARG INSTALL_SOLR=false
 
 RUN set -eux; \
     if [ ${INSTALL_SOLR} = true ]; then \
@@ -591,6 +601,7 @@ ARG INSTALL_MSGPACK=true
 RUN set -eux; \
     if [ ${INSTALL_MSGPACK} = true ]; then \
       apt-get update -yqq \
+      && apt-get install wget \
       && wget https://github.com/msgpack/msgpack-php/archive/msgpack-2.0.3.tar.gz \
       && tar -zxvf msgpack-2.0.3.tar.gz \
       && cd msgpack-php-msgpack-2.0.3/ \

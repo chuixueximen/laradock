@@ -2057,3 +2057,87 @@ services:
         - ${TARANTOOL_ADMIN_PORT}:80
       networks:
         - backend
+
+  ### golang ####################################################
+    golang:
+      container_name: golang
+      image: golang:1.20
+      working_dir: /usr/src/app
+      volumes:
+        - ../../goproject/src:/usr/src/app
+      ports:
+        - "8088:8088"
+        - "8711:8711"
+      networks:
+        - frontend
+        - backend
+      tty: true
+
+  ### node ####################################################
+    node18161:
+      container_name: node18161
+      image: node:18.16.1
+      working_dir: /app
+      volumes:
+        - ../:/app
+      ports:
+        - "8121:3000"
+        - "8122:8001"
+      networks:
+        - frontend
+        - backend
+      tty: true
+
+  ### consul ####################################################
+    consul:
+      build: ./consul
+      restart: always
+      volumes:
+        - ../fms-mq/:/fms-mq
+        - ./data/:/data/consul
+      ports:
+        - "8500:8500"
+      networks:
+        - frontend
+        - backend
+
+  ### rabbitmq-consumer ####################################################
+    rabbitmq-consumer:
+      build: ./rabbitmq-consumer
+      restart: always
+      volumes:
+        - ../:/var/www
+        - ./data/:/data/consul
+      ports:
+        - "8600:8500"
+        - "9101:9001"
+      networks:
+        - frontend
+        - backend
+
+  ### node ####################################################
+    node16201:
+      container_name: node16201
+      image: node:16.20.1
+      working_dir: /app
+      volumes:
+        - ../:/app
+      ports:
+        - "8123:3000"
+        - "8124:8001"
+        - "8009:8009"
+      networks:
+        - frontend
+        - backend
+      tty: true
+
+  ### xhgui ####################################################
+    xhgui:
+      container_name: xhgui
+      image: xhgui/xhgui:latest
+      networks:
+        - frontend
+        - backend
+      tty: true
+
+

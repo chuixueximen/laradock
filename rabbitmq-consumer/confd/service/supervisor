@@ -1,0 +1,11 @@
+{{range gets "/cache-mq/service/*"}}
+{{$data := json  .Value}}
+[program:php-mq-{{$data.command}}]
+command=php /var/www/fengxing-feidu-rabbitmq/{{$data.command}}.php {{$data.count}}
+autostart=true
+autorestart=true
+user=root
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/{{$data.command}}.log
+{{end}}

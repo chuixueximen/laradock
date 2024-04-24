@@ -295,15 +295,24 @@ RUN if [ ${INSTALL_XDEBUG} = false -a ${INSTALL_BLACKFIRE} = true ]; then \
 ###########################################################################
 # PHP REDIS EXTENSION
 ###########################################################################
+# Install igbinary
+#RUN pecl install igbinary && docker-php-ext-enable igbinary
+ARG INSTALL_IGBINARY=true
+
+RUN if [ ${INSTALL_IGBINARY} = true ]; then \
+    apt-get install -yqq && \
+    pecl install -o -f igbinary && \
+    docker-php-ext-enable igbinary \
+;fi
 
 ARG INSTALL_PHPREDIS=true
 
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     # Install Php Redis Extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl install -o -f redis-4.3.0; \
+      printf "yes\n" | pecl install -o -f redis-4.3.0; \
     else \
-      pecl install -o -f redis; \
+      printf "yes\n" | pecl install -o -f redis; \
     fi \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis \
@@ -335,7 +344,7 @@ RUN set -eux; \
 # Solr EXTENSION
 ###########################################################################
 
-ARG INSTALL_SOLR=true
+ARG INSTALL_SOLR=false
 
 RUN set -eux; \
     if [ ${INSTALL_SOLR} = true ]; then \
@@ -347,6 +356,24 @@ RUN set -eux; \
       && docker-php-ext-enable solr; \
     fi
 
+
+###########################################################################
+# tideways EXTENSION
+###########################################################################
+ARG INSTALL_TIDEWAYS=true
+
+RUN set -eux; \
+    if [ ${INSTALL_TIDEWAYS} = true ]; then \
+      apt-get update && apt-get install --no-install-recommends -y wget \
+      && wget --no-check-certificate https://github.com/tideways/php-xhprof-extension/archive/v5.0.2.tar.gz  \
+      && tar zxvf v5.0.2.tar.gz  \
+      && cd php-xhprof-extension-5.0.2  \
+      && phpize  \
+      && ./configure  \
+      && make  \
+      && make install \
+      && docker-php-ext-enable tideways_xhprof; \
+    fi
 
 
 ###########################################################################
